@@ -1,0 +1,12 @@
+{
+  "name" : "llama-cpp",
+  "version-string" : "1.0.0",
+  "builtin-baseline" : "d8e5ba9b4513ee2088c0cf17834e771300d156bd",
+  "dependencies" : [ {
+    "name" : "opencl",
+    "version>=" : "v2023.02.06#2"
+  }, {
+    "name" : "clblast",
+    "version>=" : "1.5.2#2"
+  } ]
+}

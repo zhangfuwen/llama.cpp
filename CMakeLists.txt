@@ -128,6 +128,34 @@ option(LLAMA_PERF                            "llama: enable perf"               
 # Required for relocatable CMake package
 include(${CMAKE_CURRENT_SOURCE_DIR}/scripts/build-info.cmake)
 
+# include_directories(/home/zhangfuwen/Code/conda-envs/vcpkg/CLBlast/thirdparty/OpenCL-Headers)
+
+# if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+#     set(GIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+# 
+#     # Is git submodule
+#     if(NOT IS_DIRECTORY "${GIT_DIR}")
+#         file(READ ${GIT_DIR} REAL_GIT_DIR_LINK)
+#         string(REGEX REPLACE "gitdir: (.*)\n$" "\\1" REAL_GIT_DIR ${REAL_GIT_DIR_LINK})
+#         set(GIT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/${REAL_GIT_DIR}")
+#     endif()
+# 
+#     # Add a custom target for build-info.h
+#     add_custom_target(BUILD_INFO ALL DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/build-info.h")
+# 
+#     # Add a custom command to rebuild build-info.h when .git/index changes
+#     add_custom_command(
+#         OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/build-info.h"
+#         COMMENT "Generating build details from Git"
+#         COMMAND ${CMAKE_COMMAND} -P "${CMAKE_CURRENT_SOURCE_DIR}/scripts/build-info.cmake"
+#         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#         DEPENDS "${GIT_DIR}/index"
+#         VERBATIM
+#     )
+# else()
+#     message(WARNING "Git repository not found; to enable automatic generation of build info, make sure Git is installed and the project is a Git repository.")
+# endif()
+
 #
 # Compile flags
 #
