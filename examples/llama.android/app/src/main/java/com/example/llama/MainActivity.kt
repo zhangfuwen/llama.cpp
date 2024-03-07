@@ -173,7 +173,7 @@ class MainActivity(
         if (selectedModel!= null) {
             var model = json.decodeFromString<Downloadable>(selectedModel)
             supportActionBar?.title = model.name
-            viewModel.load(model.destination.absolutePath)
+            viewModel.load(model.destination.absolutePath, model.prefix, model.postfix)
         } else {
             supportActionBar?.title = "no model selected"
         }
@@ -213,7 +213,7 @@ class MainActivity(
             val downloadable = json.decodeFromString<Downloadable>(selectedModel!!)
             supportActionBar?.title = downloadable.name
             if(downloadable.destination.exists()) {
-                viewModel.load(downloadable.destination.absolutePath)
+                viewModel.load(downloadable.destination.absolutePath, downloadable.prefix, downloadable.postfix)
                 val free = Formatter.formatFileSize(this, availableMemory().availMem)
                 val total = Formatter.formatFileSize(this, availableMemory().totalMem)
                 viewModel.log("Current memory: $free / $total")

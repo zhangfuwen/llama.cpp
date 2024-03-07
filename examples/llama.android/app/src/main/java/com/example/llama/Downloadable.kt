@@ -93,7 +93,9 @@ object FileSerializer : KSerializer<File> {
 data class Downloadable(
     val name: String,
     @Contextual val source: Uri,
-    @Contextual val destination: File
+    @Contextual val destination: File,
+    val prefix:String = "",
+    val postfix:String = ""
 ) {
     companion object {
         @JvmStatic

@@ -26,6 +26,9 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
 
     var info by mutableStateOf("")
 
+    var prefix:String = ""
+    var postfix:String=""
+
     override fun onCleared() {
         super.onCleared()
 
@@ -51,7 +54,7 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
         messages += "**机器人：** "
 
         viewModelScope.launch {
-            llm.send(text)
+            llm.send(prefix+text+postfix)
                 .catch {
                     Log.e(tag, "send() failed", it)
                     messages += it.message!!
@@ -85,10 +88,12 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
         }
     }
 
-    fun load(pathToModel: String) {
+    fun load(pathToModel: String, prefix:String, postfix:String) {
         viewModelScope.launch {
             try {
                 llm.load(pathToModel)
+                this@MainViewModel.prefix =prefix
+                this@MainViewModel.postfix = prefix
                 messages += "Loaded $pathToModel"
                 messages += "system: ${llm.system_info()}"
                 Log.e(tag, "loaded $pathToModel")
