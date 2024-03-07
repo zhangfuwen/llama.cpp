@@ -39,7 +39,7 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
     }
 
     fun send() {
-        if(Llm.instance().loadedModel.value=="") {
+        if(llm.loadedModel.value=="") {
             messages += "**系统：** 未选择并加载模型"
             return
         }
@@ -90,6 +90,7 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
             try {
                 llm.load(pathToModel)
                 messages += "Loaded $pathToModel"
+                messages += "system: ${llm.system_info()}"
                 Log.e(tag, "loaded $pathToModel")
             } catch (exc: IllegalStateException) {
                 Log.e(tag, "load() failed", exc)

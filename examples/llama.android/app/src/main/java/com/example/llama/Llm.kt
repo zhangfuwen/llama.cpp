@@ -63,7 +63,7 @@ class Llm {
         nr: Int
     ): String
 
-    private external fun system_info(): String
+    external fun system_info(): String
 
     private external fun completion_init(
         context: Long,

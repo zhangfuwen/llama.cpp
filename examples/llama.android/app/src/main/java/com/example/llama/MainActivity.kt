@@ -25,7 +25,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -37,15 +39,21 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import androidx.core.content.getSystemService
 import androidx.core.view.WindowCompat
 import androidx.preference.PreferenceManager
 import com.example.llama.ui.theme.LlamaAndroidTheme
+import kotlinx.coroutines.delay
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.io.File
@@ -214,79 +222,105 @@ class MainActivity(
             }
         }
     }
-}
+    @Composable
+    fun TickingText(modifier: Modifier) {
+        val freeMemory = remember { mutableStateOf(0L) }
+        val totalMemory = remember { mutableStateOf(0L) }
 
-@Composable
-fun MainCompose(
-    viewModel: MainViewModel,
-    clipboard: ClipboardManager,
-    dm: DownloadManager,
-    models: List<Downloadable>
-) {
-    Column {
-        val scrollState = rememberLazyListState()
-
-        Box(modifier = Modifier.weight(1f)) {
-            LazyColumn(state = scrollState) {
-                items(viewModel.messages) {
-                    Text(
-//                  MarkdownText(
-                        it,
-                        style = MaterialTheme.typography.bodyLarge.copy(color = LocalContentColor.current),
-                        color = Color.Black,
-                        modifier = Modifier
-                            .padding(8.dp)
-                            .background(Color(android.graphics.Color.parseColor("#aaff1f")), shape = RoundedCornerShape(10.dp))
-                            .padding(20.dp, 8.dp)
-
-                    )
-                }
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(1000) // Wait for 1 second
+                freeMemory.value = availableMemory().availMem
+                totalMemory.value = availableMemory().totalMem
             }
         }
-        OutlinedTextField(
-            value = viewModel.message,
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            onValueChange = { viewModel.updateMessage(it) },
-            label = { Text("Message") },
-        )
-        Row(
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(20.dp, 0.dp, 20.dp, 0.dp)
-                .fillMaxWidth()
-        ) {
-            Button({ viewModel.send() },
-                Modifier
-                    .padding(4.dp, 0.dp)
-                    .weight(1f)) { Text("Send") }
-            Button(
-                { viewModel.bench(8, 4, 1) },
-                Modifier
-                    .padding(4.dp, 0.dp)
-                    .weight(1f)
-            ) { Text("Bench") }
-            Button({ viewModel.clear() },
-                Modifier
-                    .padding(4.dp, 0.dp)
-                    .weight(1f)) { Text("Clear") }
-            Button({
-                viewModel.messages.joinToString("\n").let {
-                    clipboard.setPrimaryClip(ClipData.newPlainText("", it))
-                }
-            },
-                Modifier
-                    .padding(4.dp, 0.dp)
-                    .weight(1f)) { Text("Copy") }
+
+        Column (modifier = modifier){
+            Text(text = "Memory: ${Formatter.formatFileSize(this@MainActivity,freeMemory.value)}/${Formatter.formatFileSize(this@MainActivity,totalMemory.value)}",
+                color=Color.White
+            )
         }
+    }
+
+    @Composable
+    fun MainCompose(
+        viewModel: MainViewModel,
+        clipboard: ClipboardManager,
+        dm: DownloadManager,
+        models: List<Downloadable>,
+    ) {
+        TickingText(modifier=Modifier.wrapContentSize(align = Alignment.TopStart).padding(8.dp).alpha(0.5f).zIndex(20f).background(Color.Black).padding(8.dp))
+        Column {
+            val scrollState = rememberLazyListState()
+
+            Box(modifier = Modifier.weight(1f)) {
+                LazyColumn(state = scrollState) {
+                    items(viewModel.messages) {
+                        Text(
+//                  MarkdownText(
+                            it,
+                            style = MaterialTheme.typography.bodyLarge.copy(color = LocalContentColor.current),
+                            color = Color.Black,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .background(
+                                    Color(android.graphics.Color.parseColor("#aaff1f")),
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .padding(20.dp, 8.dp)
+
+                        )
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = viewModel.message,
+                modifier = Modifier
+                    .padding(20.dp)
+                    .fillMaxWidth(),
+                onValueChange = { viewModel.updateMessage(it) },
+                label = { Text("Message") },
+            )
+            Row(
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .padding(20.dp, 0.dp, 20.dp, 0.dp)
+                    .fillMaxWidth()
+            ) {
+                Button({ viewModel.send() },
+                    Modifier
+                        .padding(4.dp, 0.dp)
+                        .weight(1f)) { Text("Send") }
+                Button(
+                    { viewModel.bench(8, 4, 1) },
+                    Modifier
+                        .padding(4.dp, 0.dp)
+                        .weight(1f)
+                ) { Text("Bench") }
+                Button({ viewModel.clear() },
+                    Modifier
+                        .padding(4.dp, 0.dp)
+                        .weight(1f)) { Text("Clear") }
+                Button({
+                    viewModel.messages.joinToString("\n").let {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("", it))
+                    }
+                },
+                    Modifier
+                        .padding(4.dp, 0.dp)
+                        .weight(1f)) { Text("Copy") }
+            }
 
 //        Column {
 //            for (model in models) {
 //                Downloadable.Button(viewModel, dm, model)
 //            }
 //        }
+        }
+
+
     }
-
-
 }
+
+
+
