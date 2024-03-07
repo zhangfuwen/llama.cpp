@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.6.0" apply true
 }
 
 android {
@@ -91,5 +92,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation("com.github.jeziellago:compose-markdown:0.4.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 //    implementation("io.github.karolgawlowski:compose-markdown:0.3.5")
 }
+
+

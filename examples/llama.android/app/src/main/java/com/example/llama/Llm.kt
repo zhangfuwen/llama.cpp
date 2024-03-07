@@ -106,14 +106,14 @@ class Llm {
         withContext(runLoop) {
             when (threadLocalState.get()) {
                 State.Idle, is State.Loaded  -> {
-                    unload()
+//                    unload()
                     val model = load_model(pathToModel)
                     if (model == 0L)  throw IllegalStateException("load_model() failed")
 
                     val context = new_context(model)
                     if (context == 0L) throw IllegalStateException("new_context() failed")
 
-                    val batch = new_batch(8, 0, 1)
+                    val batch = new_batch(512, 0, 1)
                     if (batch == 0L) throw IllegalStateException("new_batch() failed")
 
                     Log.i(tag, "Loaded model $pathToModel")

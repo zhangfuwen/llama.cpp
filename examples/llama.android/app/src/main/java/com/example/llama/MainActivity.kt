@@ -5,19 +5,18 @@ import android.app.DownloadManager
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import android.os.Bundle
 import android.os.StrictMode
 import android.os.StrictMode.VmPolicy
-import android.text.Html
 import android.text.format.Formatter
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import android.widget.Toast
-import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
@@ -45,15 +44,17 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import androidx.core.content.getSystemService
 import androidx.core.view.WindowCompat
+import androidx.preference.PreferenceManager
 import com.example.llama.ui.theme.LlamaAndroidTheme
-import dev.jeziellago.compose.markdowntext.MarkdownText
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import java.io.File
 
 class MainActivity(
     activityManager: ActivityManager? = null,
     downloadManager: DownloadManager? = null,
     clipboardManager: ClipboardManager? = null,
-) : AppCompatActivity() {
+) : AppCompatActivity(), SharedPreferences.OnSharedPreferenceChangeListener {
     private val tag: String? = this::class.simpleName
 
     private val activityManager by lazy { activityManager ?: getSystemService<ActivityManager>()!! }
@@ -152,11 +153,23 @@ class MainActivity(
 //        linearLayout.addView(TextView(this))
         setContentView(linearLayout)
 
-        Llm.instance().loadedModel.observe(this@MainActivity) {
-            if(it!=null) {
-                supportActionBar?.title = if (it.isEmpty()) "no model" else it.split("/").last()
-            }
+//        Llm.instance().loadedModel.observe(this@MainActivity) {
+//            if(it!=null) {
+//                supportActionBar?.title = if (it.isEmpty()) "no model" else it.split("/").last()
+//            }
+//        }
+        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this)
+        sharedPreferences.registerOnSharedPreferenceChangeListener (this)
+
+        val selectedModel = sharedPreferences.getString("selected_model", null )
+        if (selectedModel!= null) {
+            var model = json.decodeFromString<Downloadable>(selectedModel)
+            supportActionBar?.title = model.name
+            viewModel.load(model.destination.absolutePath)
+        } else {
+            supportActionBar?.title = "no model selected"
         }
+
 
     }
 
@@ -185,6 +198,22 @@ class MainActivity(
             else -> return super.onOptionsItemSelected(item)
         }
     }
+
+    override fun onSharedPreferenceChanged(sharedPreferences: SharedPreferences?, key: String?) {
+        if (key == "selected_model") {
+            val selectedModel = sharedPreferences?.getString("selected_model", "no model selected")
+            val downloadable = json.decodeFromString<Downloadable>(selectedModel!!)
+            supportActionBar?.title = downloadable.name
+            if(downloadable.destination.exists()) {
+                viewModel.load(downloadable.destination.absolutePath)
+                val free = Formatter.formatFileSize(this, availableMemory().availMem)
+                val total = Formatter.formatFileSize(this, availableMemory().totalMem)
+                viewModel.log("Current memory: $free / $total")
+            } else {
+                Log.e(tag, "selected model does not exists, ${downloadable.destination.absolutePath}")
+            }
+        }
+    }
 }
 
 @Composable
@@ -200,7 +229,8 @@ fun MainCompose(
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(state = scrollState) {
                 items(viewModel.messages) {
-                    MarkdownText(
+                    Text(
+//                  MarkdownText(
                         it,
                         style = MaterialTheme.typography.bodyLarge.copy(color = LocalContentColor.current),
                         color = Color.Black,
