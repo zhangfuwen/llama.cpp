@@ -3,6 +3,7 @@ package com.example.llama
 import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -23,6 +24,8 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
     var message by mutableStateOf("")
         private set
 
+    var info by mutableStateOf("")
+
     override fun onCleared() {
         super.onCleared()
 
@@ -36,12 +39,16 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
     }
 
     fun send() {
+        if(Llm.instance().loadedModel.value=="") {
+            messages += "**系统：** 未选择并加载模型"
+            return
+        }
         val text = message
         message = ""
 
         // Add to messages console.
-        messages += text
-        messages += ""
+        messages += "**用户：** "+text
+        messages += "**机器人：** "
 
         viewModelScope.launch {
             llm.send(text)
@@ -83,6 +90,7 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
             try {
                 llm.load(pathToModel)
                 messages += "Loaded $pathToModel"
+                Log.e(tag, "loaded $pathToModel")
             } catch (exc: IllegalStateException) {
                 Log.e(tag, "load() failed", exc)
                 messages += exc.message!!
@@ -99,6 +107,6 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
     }
 
     fun log(message: String) {
-        messages += message
+        messages += "**系统日志：** "+message
     }
 }

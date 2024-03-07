@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.LlamaAndroid" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.LlamaAndroid" parent="Theme.AppCompat" >
+        <item name="android:windowTranslucentNavigation">true</item>
+        <item name="android:fitsSystemWindows">true</item>
+    </style>
 </resources>

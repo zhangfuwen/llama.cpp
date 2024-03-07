@@ -1,11 +1,15 @@
 package com.example.llama
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import java.util.concurrent.Executors
 import kotlin.concurrent.thread
@@ -14,6 +18,8 @@ class Llm {
     private val tag: String? = this::class.simpleName
 
     private val threadLocalState: ThreadLocal<State> = ThreadLocal.withInitial { State.Idle }
+
+    var loadedModel = MutableLiveData<String>("")
 
     private val runLoop: CoroutineDispatcher = Executors.newSingleThreadExecutor {
         thread(start = false, name = "Llm-RunLoop") {
@@ -88,21 +94,32 @@ class Llm {
         }
     }
 
+    suspend fun getState() :State {
+        var state : State
+        runBlocking (runLoop) {
+            state = threadLocalState.get()!!
+        }
+        return state
+    }
+
     suspend fun load(pathToModel: String) {
         withContext(runLoop) {
             when (threadLocalState.get()) {
-                is State.Idle -> {
+                State.Idle, is State.Loaded  -> {
+                    unload()
                     val model = load_model(pathToModel)
                     if (model == 0L)  throw IllegalStateException("load_model() failed")
 
                     val context = new_context(model)
                     if (context == 0L) throw IllegalStateException("new_context() failed")
 
-                    val batch = new_batch(512, 0, 1)
+                    val batch = new_batch(8, 0, 1)
                     if (batch == 0L) throw IllegalStateException("new_batch() failed")
 
                     Log.i(tag, "Loaded model $pathToModel")
-                    threadLocalState.set(State.Loaded(model, context, batch))
+//                    loadedModel.value = pathToModel
+                    loadedModel.postValue(pathToModel)
+                    threadLocalState.set(State.Loaded(model, context, batch, pathToModel))
                 }
                 else -> throw IllegalStateException("Model already loaded")
             }
@@ -140,6 +157,7 @@ class Llm {
                     free_batch(state.batch)
 
                     threadLocalState.set(State.Idle)
+                    loadedModel.postValue("")
                 }
                 else -> {}
             }
@@ -159,9 +177,9 @@ class Llm {
             }
         }
 
-        private sealed interface State {
+        sealed interface State {
             data object Idle: State
-            data class Loaded(val model: Long, val context: Long, val batch: Long): State
+            data class Loaded(val model: Long, val context: Long, val batch: Long, val modelPath: String): State
         }
 
         // Enforce only one instance of Llm.
