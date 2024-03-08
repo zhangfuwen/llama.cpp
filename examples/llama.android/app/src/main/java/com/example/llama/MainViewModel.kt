@@ -93,8 +93,9 @@ class MainViewModel(private val llm: Llm = Llm.instance()): ViewModel() {
             try {
                 llm.load(pathToModel)
                 this@MainViewModel.prefix =prefix
-                this@MainViewModel.postfix = prefix
+                this@MainViewModel.postfix = postfix
                 messages += "Loaded $pathToModel"
+                messages += "prefix $prefix, postfix: $postfix"
                 messages += "system: ${llm.system_info()}"
                 Log.e(tag, "loaded $pathToModel")
             } catch (exc: IllegalStateException) {

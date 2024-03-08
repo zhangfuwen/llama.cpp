@@ -300,7 +300,7 @@ Java_com_example_llama_Llm_completion_1init(
     const auto context = reinterpret_cast<llama_context *>(context_pointer);
     const auto batch = reinterpret_cast<llama_batch *>(batch_pointer);
 
-    const auto tokens_list = llama_tokenize(context, text, 1);
+    const auto tokens_list = llama_tokenize(context, text, 1, true);
 
     auto n_ctx = llama_n_ctx(context);
     auto n_kv_req = tokens_list.size() + (n_len - tokens_list.size());
@@ -312,7 +312,7 @@ Java_com_example_llama_Llm_completion_1init(
     }
 
     for (auto id : tokens_list) {
-        LOGi("%s", llama_token_to_piece(context, id).c_str());
+        LOGi("input token %d:%s", id, llama_token_to_piece(context, id).c_str());
     }
 
     llama_batch_clear(*batch);
@@ -373,7 +373,7 @@ Java_com_example_llama_Llm_completion_1loop(
     }
 
     auto new_token_chars = llama_token_to_piece(context, new_token_id);
-    LOGi("new_token_chars: `%s`", new_token_chars.c_str());
+    LOGi("new_token_chars: `%s`, id:%d", new_token_chars.c_str(), new_token_id);
     auto new_token = env->NewStringUTF(new_token_chars.c_str());
 
     llama_batch_clear(*batch);

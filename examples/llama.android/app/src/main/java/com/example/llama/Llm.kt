@@ -42,7 +42,7 @@ class Llm {
         }
     }.asCoroutineDispatcher()
 
-    private val nlen: Int = 64
+    private val nlen: Int = 1024
 
     private external fun log_to_android()
     private external fun load_model(filename: String): Long
@@ -127,6 +127,7 @@ class Llm {
     }
 
     fun send(message: String): Flow<String> = flow {
+        Log.e(tag, "llm input:${message}")
         when (val state = threadLocalState.get()) {
             is State.Loaded -> {
                 val ncur = IntVar(completion_init(state.context, state.batch, message, nlen))
