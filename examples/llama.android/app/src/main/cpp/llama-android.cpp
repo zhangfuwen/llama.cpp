@@ -428,6 +428,10 @@ Java_com_example_llama_Llm_completion_1loop(
         LOGi("cached: %s, new_token_chars: `%s`, id:%d", cached_token_chars.c_str(), new_token_chars.c_str(), new_token_id);
         cached_token_chars="";
     } else {
+        LOGe("invalid utf8 string, length:%d, token id:%d", cached_token_chars.length(), new_token_id);
+        for(auto c: cached_token_chars) {
+            LOGe("char: %d", c);
+        }
         new_token = env->NewStringUTF("");
     }
 
