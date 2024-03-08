@@ -77,7 +77,7 @@ class Llm {
         batch: Long,
         nLen: Int,
         ncur: IntVar
-    ): String
+    ): String?
 
     private external fun kv_cache_clear(context: Long)
 
@@ -126,14 +126,14 @@ class Llm {
         }
     }
 
-    fun send(message: String): Flow<String> = flow {
+    fun send(message: String): Flow<String?> = flow {
         Log.e(tag, "llm input:${message}")
         when (val state = threadLocalState.get()) {
             is State.Loaded -> {
                 val ncur = IntVar(completion_init(state.context, state.batch, message, nlen))
                 while (ncur.value <= nlen) {
                     val str = completion_loop(state.context, state.batch, nlen, ncur)
-                    if (str.isEmpty()) {
+                    if (str == null) {
                         break
                     }
                     emit(str)
