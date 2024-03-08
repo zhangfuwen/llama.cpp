@@ -1,5 +1,6 @@
 package com.example.llama
 
+import android.app.Activity
 import android.app.DownloadManager
 import android.net.Uri
 import android.util.Log
@@ -40,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
@@ -153,11 +155,16 @@ data class Downloadable(
                     delay(1000L)
                 }
             }
+            val callingActivity = LocalContext.current as Activity
 
             fun onClick() {
                 when (val s = status) {
                     is Downloaded -> {
 //                        viewModel.load(item.destination.path)
+                        showConfirmDialog(context = callingActivity) {
+                            item.destination.delete()
+                            status = Ready
+                        }
                     }
 
                     is Downloading -> {
@@ -206,15 +213,15 @@ data class Downloadable(
                 )
                 Button(
                     onClick = { onClick() },
-                    enabled = status !is Downloading && status !is Downloaded,
+                    enabled = status !is Downloading,
                     modifier = Modifier.padding(8.dp, 0.dp)
                 )
                 {
                     Text(
                         when (status) {
                             is Downloading -> "${(progress * 100).toInt()}%"
-                            is Downloaded -> "Downloaded"
-                            is Ready -> "Ready"
+                            is Downloaded -> "删除"
+                            is Ready -> "Download"
                             is Error -> "Error"
                         }
                         )
